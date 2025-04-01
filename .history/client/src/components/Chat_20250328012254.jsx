@@ -25,16 +25,13 @@ const Chat = ({ socketRef, roomId, username }) => {
   useEffect(() => {
     if (!socketRef.current || !socketRef.current.connected) return;
 
-    console.log('Setting up chat listeners for:', roomId);
     socketRef.current.emit(ACTIONS.FETCH_MESSAGES, { roomId });
 
     const handleFetchedMessages = (data) => {
-      console.log('Fetched messages:', data.messages);
-      setMessages(data.messages || []); // Ensure it's an array
+      setMessages(data.messages || []);
     };
 
     const handleNewMessage = (messageData) => {
-      console.log('Received new message:', messageData);
       setMessages((prev) => [...prev, messageData]);
     };
 
@@ -47,40 +44,25 @@ const Chat = ({ socketRef, roomId, username }) => {
     };
   }, [roomId]);
 
-
-
-  // Scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!socketRef.current) {
-      console.log('Cannot send message: Socket not initialized');
-      return;
-    }
+    if (!socketRef.current || !socketRef.current.connected || !newMessage.trim()) return;
 
-    if (!socketRef.current.connected) {
-      console.log('Cannot send message: Socket not connected');
-      return;
-    }
-
-    if (newMessage.trim()) {
     const messageData = {
       roomId,
       message: newMessage.trim(),
       username,
     };
-      
-      console.log('Sending message:', messageData);
 
     try {
       socketRef.current.emit(ACTIONS.SEND_MESSAGE, messageData);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-    }
     }
   };
 
@@ -92,55 +74,57 @@ const Chat = ({ socketRef, roomId, username }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#232329] text-white w-96 overflow-hidden border-r border-[#393E46]">
-      <div className="p-2 flex-shrink-0">
-        <p className="text-center text-lg text-[#bbb8ff] mb-0">Group Chat</p>
+    <div className="h-full flex flex-col bg-gray-900 text-white w-96 overflow-hidden border-r border-gray-700">
+      {/* Header */}
+      <div className="p-3 border-b border-gray-700 bg-gray-800">
+        <p className="text-center text-lg font-semibold text-indigo-400">Group Chat</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto m-2 space-y-4 bg-[#393E46] p-2 rounded-lg custom-scrollbar">
-        {messages && messages.length > 0 ? (
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+        {messages.length > 0 ? (
           messages.map((message) => (
             <div
               key={message.id || message.timestamp}
-              className={`rounded-lg p-3 ${
+              className={`p-3 rounded-lg shadow-md ${
                 message.username === username
-                  ? 'bg-[#232329] ml-auto' 
-                  : 'bg-[#31353b]'
+                  ? 'bg-indigo-500 text-white ml-auto'
+                  : 'bg-gray-700 text-gray-200'
               } max-w-[85%]`}
             >
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-semibold text-[#bbb8ff]">
+              <div className="flex justify-between items-center mb-1">
+                <p className="text-sm font-medium">
                   {message.username === username ? 'You' : message.username}
                 </p>
-                <p className="text-xs text-gray-300 ml-2">
-                  {formatTimestamp(message.timestamp)}
-                </p>
+                <p className="text-xs text-gray-400">{formatTimestamp(message.timestamp)}</p>
               </div>
-              <p className="text-gray-100 break-words mb-0">{message.message}</p>
+              <p className="text-sm">{message.message}</p>
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-400">No messages yet</div>
+          <div className="text-center text-gray-500">No messages yet</div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="p-2 flex-shrink-0">
-        <div className="flex items-center gap-1 ">
+      {/* Message Input */}
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-700 bg-gray-800">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 min-w-0 bg-[#393E46] text-white rounded px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#bbb8ff]"
+            className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
           <button
             type="submit"
             disabled={!socketRef.current?.connected}
-            className={`px-6 py-2.5 rounded transition-colors whitespace-nowrap flex-shrink-0 font-medium
-              ${socketRef.current?.connected 
-                ? 'bg-[#bbb8ff] text-black hover:bg-[#aaaaff]'
-                : 'bg-gray-500 cursor-not-allowed text-gray-300'}`}
+            className={`px-5 py-2 rounded-lg transition-all font-medium ${
+              socketRef.current?.connected
+                ? 'bg-indigo-500 text-white hover:bg-indigo-400'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
           >
             {socketRef.current?.connected ? 'Send' : 'Connecting...'}
           </button>

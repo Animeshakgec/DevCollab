@@ -21,32 +21,32 @@ const Chat = ({ socketRef, roomId, username }) => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
+  
   useEffect(() => {
     if (!socketRef.current || !socketRef.current.connected) return;
-
+  
     console.log('Setting up chat listeners for:', roomId);
     socketRef.current.emit(ACTIONS.FETCH_MESSAGES, { roomId });
-
+  
     const handleFetchedMessages = (data) => {
       console.log('Fetched messages:', data.messages);
       setMessages(data.messages || []); // Ensure it's an array
     };
-
+  
     const handleNewMessage = (messageData) => {
       console.log('Received new message:', messageData);
       setMessages((prev) => [...prev, messageData]);
     };
-
+  
     socketRef.current.on(ACTIONS.RECEIVE_MESSAGE, handleNewMessage);
-    socketRef.current.on(ACTIONS.FETCH_MESSAGES, handleFetchedMessages);
-
+    socketRef.current.on(ACTIONS.FETCH_MESSAGES, handleFetchedMessages); 
+  
     return () => {
       socketRef.current.off(ACTIONS.RECEIVE_MESSAGE, handleNewMessage);
       socketRef.current.off(ACTIONS.FETCH_MESSAGES, handleFetchedMessages);
     };
   }, [roomId]);
-
+  
 
 
   // Scroll to bottom when messages update
@@ -67,20 +67,20 @@ const Chat = ({ socketRef, roomId, username }) => {
     }
 
     if (newMessage.trim()) {
-    const messageData = {
-      roomId,
-      message: newMessage.trim(),
-      username,
-    };
+      const messageData = {
+        roomId,
+        message: newMessage.trim(),
+        username,
+      };
       
       console.log('Sending message:', messageData);
-
-    try {
-      socketRef.current.emit(ACTIONS.SEND_MESSAGE, messageData);
-      setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
+      
+      try {
+        socketRef.current.emit(ACTIONS.SEND_MESSAGE, messageData);
+        setNewMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
   };
 
@@ -96,14 +96,14 @@ const Chat = ({ socketRef, roomId, username }) => {
       <div className="p-2 flex-shrink-0">
         <p className="text-center text-lg text-[#bbb8ff] mb-0">Group Chat</p>
       </div>
-
+      
       <div className="flex-1 overflow-y-auto m-2 space-y-4 bg-[#393E46] p-2 rounded-lg custom-scrollbar">
         {messages && messages.length > 0 ? (
           messages.map((message) => (
-            <div
-              key={message.id || message.timestamp}
+            <div 
+              key={message.id || message.timestamp} 
               className={`rounded-lg p-3 ${
-                message.username === username
+                message.username === username 
                   ? 'bg-[#232329] ml-auto' 
                   : 'bg-[#31353b]'
               } max-w-[85%]`}
@@ -150,4 +150,4 @@ const Chat = ({ socketRef, roomId, username }) => {
   );
 };
 
-export default Chat;
+export default Chat; 
